@@ -12,6 +12,8 @@ object ThrowException extends App {
   val rdd = RDDCreator.createRDD(List(1,2,3))
 
   new BadIncrementor(3).transform(rdd).foreach(println)
+
+  // Le context Spark n'est pas stoppé
 }
 
 class BadIncrementor(i:Int) {

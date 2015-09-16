@@ -24,7 +24,7 @@ object WordCount extends App {
   val topTen: Array[(String, Int)] = counts.sortBy(_._2, false)
     .take(10)
 
-  topTen.map(println)
+  topTen.foreach(println)
   
   sparkContext.stop()
 }

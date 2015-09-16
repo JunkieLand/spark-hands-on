@@ -30,7 +30,6 @@ trait DataSaver {
     }
     val crcFilePath = directoryPath + crcFileName
     FileUtil.fullyDelete(new File(crcFilePath))
-
   }
 
 }

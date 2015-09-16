@@ -1054,7 +1054,7 @@ val newDataFrame = oldDataFrame.groupBy("column1")
   \begin{block}{Statement}
     We have a JSON file containing the list of French cities with city name, population, surface, number of executives, number of farmers, number of workers, number of employees. 
     \\ \medskip
-    For each city having more than 2000 inhabitants, we want to save its name, if its has more than 5000 inhabitants or not, its density, its percentage of executives, its percentage of farmers, its percentage of workers and its percentage of employees.
+    For each city having more than 2000 inhabitants, we want to save its name, if it has more than 5000 inhabitants or not, its density, its percentage of executives, its percentage of farmers, its percentage of workers and its percentage of employees.
   \end{block}
 
   \begin{block}{What you will learn}
@@ -1876,7 +1876,7 @@ spark://blue:7077
 sbt clean package
 $SPARK_HOME/bin/spark-submit \ 
 --master spark://blue:7077 \ 
---class psug.hands.on.solutions.exercise01.SumOfSquaresOfNonPrimeNumbers \ 
+--class psug.hands.on.exercise01.SumOfSquaresOfNonPrimeNumbers \
 --deploy-mode cluster \ 
 target/scala-2.10/psug-hands-on-spark_2.10-0.0.1.jar
   \end{lstlisting} 
