@@ -3,9 +3,9 @@ package psug.hands.on.exercise08
 import org.apache.spark.rdd.RDD
 import psug.hands.on.exercise05.{City, DataSaver}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
-import org.apache.spark.mllib.classification.LogisticRegressionWithSGD
-import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.sql.{Row, DataFrame, SQLContext}
+import org.apache.spark.mllib.classification.{LogisticRegressionModel, LogisticRegressionWithSGD}
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.mllib.regression.LabeledPoint
 
 /**
@@ -25,10 +25,40 @@ object MachineLearning extends App with DataSaver {
   val testInputFile = "data/test_cities.json"
   val outputFile = "data/labeled_cities.json"
 
+  val sparkConf = new SparkConf()
+    .setAppName("hands-on")
+    .setMaster("local[8]")
+  val sparkContext = new SparkContext(sparkConf)
+  val sqlContext = new SQLContext(sparkContext)
+
   init()
 
-  val labeledCities: RDD[String] = ???
+  def getFeaturesVector(row: Row): Vector = {
+    val rawFeatures = row.getAs[List[Double]]("features")
+    Vectors.dense(rawFeatures.toArray)
+  }
+
+
+  val labelPoints: RDD[LabeledPoint] = sqlContext.read.json(trainingInputFile)
+    .map(r => LabeledPoint(r.getAs[Double]("category"), getFeaturesVector(r)))
+    .cache()
+
+  val numIterations: Int = 1000
+  val stepSize: Double = 1000
+  val model: LogisticRegressionModel = LogisticRegressionWithSGD.train(labelPoints, numIterations, stepSize)
+
+  import sqlContext.implicits._
+
+  val labeledCities: RDD[String] = sqlContext.read.json(testInputFile)
+    .map(r => {
+      val prediction = model.predict(getFeaturesVector(r))
+      (r.getAs[String]("name"), r.getAs[Double]("category"), prediction)
+    })
+    .toDF("name", "category", "prediction")
+    .toJSON
 
   labeledCities.saveAsTextFile(temporaryFile + "/1")
   merge(temporaryFile + "/1", outputFile)
+
+  sparkContext.stop()
 }

@@ -27,8 +27,27 @@ object DataSetSplitter extends App with DataSaver {
 
   init()
 
-  val trainingCities:RDD[String] = ???
-  val testCities:RDD[String] = ???
+  val sparkConf = new SparkConf()
+    .setAppName("hands-on")
+    .setMaster("local[8]")
+  val sparkContext = new SparkContext(sparkConf)
+  val sqlContext = new SQLContext(sparkContext)
+
+  val df: DataFrame = sqlContext.read.json(inputFile)
+
+  // Version 1
+//  val allCities: RDD[String] = df.toJSON.cache()
+//  val trainingCities: RDD[String] = allCities.sample(true, 0.1)
+//  val testCities: RDD[String] = allCities.subtract(trainingCities)
+
+  // Version 2
+  df.registerTempTable("allCities")
+  val trainingCitiesDF: DataFrame = df.sample(true, 0.1)
+  trainingCitiesDF.registerTempTable("trainingCities")
+  val trainingCities: RDD[String] = trainingCitiesDF.toJSON
+  val testCities: RDD[String] = sqlContext
+    .sql("SELECT allCities.* FROM allCities EXCEPT SELECT trainingCities.* FROM trainingCities")
+    .toJSON
 
   trainingCities.saveAsTextFile(temporaryFile + "/1")
   merge(temporaryFile + "/1", trainingCitiesFile)
@@ -36,4 +55,6 @@ object DataSetSplitter extends App with DataSaver {
   merge(temporaryFile + "/2", testCitiesFile)
 
   println("There are " + testCities.count() + " test cities and " + trainingCities.count() + " training cities")
+
+  sparkContext.stop()
 }
